@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Chromium</title>
+  <!-- marked.js：将 Markdown 渲染为 HTML，用于显示 agent 回复 -->
+  <script src="marked.min.js"></script>
+  <style>
+    /* ── 全局重置 ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:    #1a73e8;   /* Google 蓝 */
+      --bg:      #ffffff;
+      --surface: #f8f9fa;   /* 顶栏/底栏浅灰 */
+      --border:  #e8eaed;
+      --text:    #202124;
+      --muted:   #5f6368;
+      --user-bg: #e8f0fe;   /* 用户气泡淡蓝 */
+      --user-fg: #1a1a1a;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Google Sans', 'Segoe UI', sans-serif;
+      font-size: 14px;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    /* ─────────────── 顶部导航栏 ─────────────── */
+    #header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 16px;
+      height: 52px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    /* Gemini 彩虹图标（CSS 渐变模拟）*/
+    #gem-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4285f4 0%, #9c27b0 40%, #ea4335 70%, #fbbc04 100%);
+      flex-shrink: 0;
+    }
+    #header-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.2px;
+    }
+    /* 右侧"新建对话"按钮（已移至 model-bar）*/
+
+    /* ─────────────── 主内容区 ─────────────── */
+    #main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 16px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* 空白欢迎界面 */
+    #welcome {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      gap: 12px;
+      color: var(--muted);
+      padding: 40px 0;
+    }
+    #welcome .big-gem {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4285f4 0%, #9c27b0 40%, #ea4335 70%, #fbbc04 100%);
+    }
+    #welcome h2 {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    #welcome p { font-size: 13px; text-align: center; }
+
+    /* 建议词胶囊（欢迎页快捷提示）*/
+    #suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      padding: 4px 0;
+    }
+    .suggestion-chip {
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 7px 14px;
+      font-size: 12px;
+      cursor: pointer;
+      color: var(--text);
+      background: var(--bg);
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .suggestion-chip:hover {
+      background: var(--surface);
+      border-color: var(--blue);
+    }
+
+    /* ─────────────── 消息列表 ─────────────── */
+    #messages {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* 用户消息：右侧圆角气泡 */
+    .msg-user {
+      align-self: flex-end;
+      max-width: 82%;
+      background: var(--user-bg);
+      color: var(--user-fg);
+      border-radius: 20px 20px 4px 20px;
+      padding: 10px 16px;
+      line-height: 1.55;
+      word-break: break-word;
+    }
+
+    /* Agent 消息：左侧无背景，带 Gemini 图标 */
+    .msg-agent-wrap {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      max-width: 100%;
+    }
+    .msg-agent-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4285f4, #9c27b0, #ea4335, #fbbc04);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .msg-agent {
+      flex: 1;
+      color: var(--text);
+      line-height: 1.65;
+      word-break: break-word;
+    }
+    /* Markdown 渲染样式 */
+    .msg-agent p   { margin-bottom: 8px; }
+    .msg-agent ul,
+    .msg-agent ol  { margin: 6px 0 8px 18px; }
+    .msg-agent li  { margin-bottom: 4px; }
+    .msg-agent code {
+      background: var(--surface);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-family: 'Consolas', monospace;
+      font-size: 12.5px;
+    }
+    .msg-agent pre {
+      background: var(--surface);
+      border-radius: 8px;
+      padding: 12px 14px;
+      overflow-x: auto;
+      margin: 8px 0;
+    }
+    .msg-agent pre code {
+      background: none;
+      padding: 0;
+      font-size: 12.5px;
+    }
+    .msg-agent strong { font-weight: 600; }
+
+    /* 打字光标动画（流式输出时显示）*/
+    .typing-cursor::after {
+      content: '▋';
+      animation: blink 0.7s step-end infinite;
+      color: var(--blue);
+      font-size: 0.85em;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* ─────────────── 底部操作栏 ─────────────── */
+    #footer {
+      padding: 8px 12px 12px;
+      background: var(--bg);
+      flex-shrink: 0;
+    }
+    /* 输入框容器：带阴影的圆角矩形 */
+    #input-box {
+      display: flex;
+      flex-direction: column;
+      border: 1.5px solid var(--border);
+      border-radius: 26px;
+      padding: 8px 8px 8px 16px;
+      background: var(--bg);
+      box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    #input-box:focus-within {
+      border-color: var(--blue);
+      box-shadow: 0 1px 10px rgba(26,115,232,0.18);
+    }
+    /* 输入行：textarea + 发送按钮 */
+    #input-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+    }
+    /* ─────────────── 附件芯片区域 ─────────────── */
+    #attachments-bar {
+      padding-bottom: 6px;
+    }
+    #attachments {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+    #btn-add-page {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 22px;
+      width: 22px;
+      border-radius: 11px;
+      border: 1px dashed var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+    #btn-add-page:hover { border-color: var(--blue); color: var(--blue); background: rgba(26,115,232,0.06); }
+    .file-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 3px 6px 3px 8px;
+      font-size: 12px;
+      color: var(--text);
+      max-width: 200px;
+    }
+    .file-chip-icon { flex-shrink: 0; }
+    .file-chip-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .file-chip-remove {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0 2px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      border-radius: 50%;
+      transition: color 0.15s, background 0.15s;
+    }
+    .file-chip-remove:hover { color: #c62828; background: #fce8e6; }
+    /* 拖放悬停高亮 */
+    #footer.drag-over #input-box {
+      border-color: var(--blue);
+      background: rgba(26,115,232,0.05);
+    }
+    /* ─────────────── 当前模型信息栏 ─────────────── */
+    #model-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 2px 6px 2px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 6px;
+    }
+    #model-info {
+      flex: 1;
+      font-size: 11px;
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    #btn-settings {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 22px;
+      line-height: 1;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 14px;
+      padding: 0 4px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      transition: background 0.15s, color 0.15s;
+    }
+    #btn-settings:hover { background: var(--surface); color: var(--text); }
+    #btn-new {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 22px;
+      line-height: 1;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 14px;
+      padding: 0 4px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      transition: background 0.15s, color 0.15s;
+    }
+    #btn-new:hover { background: var(--surface); color: var(--text); }
+    #agent-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      resize: none;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text);
+      background: transparent;
+      line-height: 1.5;
+      max-height: 160px;
+      overflow-y: auto;
+    }
+    #agent-input::placeholder { color: var(--muted); }
+
+    /* 发送按钮：Gemini 蓝圆形 */
+    #agent-run {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: var(--blue);
+      color: #fff;
+      font-size: 17px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s, transform 0.1s;
+    }
+    #agent-run:hover  { background: #1558b0; }
+    #agent-run:active { transform: scale(0.93); }
+    /* 禁用状态（发送中）*/
+    #agent-run:disabled {
+      background: var(--border);
+      color: var(--muted);
+      cursor: not-allowed;
+    }
+
+    /* 底部免责声明 */
+    #disclaimer {
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 6px;
+      padding: 0 8px;
+    }
+
+    /* ─────────────── 设置面板覆盖层 ─────────────── */
+    #settings-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      z-index: 200;
+      flex-direction: column;
+      background: #fff;
+    }
+    #settings-frame {
+      flex: 1;
+      width: 100%;
+      border: none;
+      overflow: hidden;
+    }
+
+    /* 通用：整体 flex 布局 */
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── 主内容区 ── -->
+  <div id="main">
+
+    <!-- 欢迎页（有消息后隐藏）-->
+    <div id="welcome">
+      <div class="big-gem"></div>
+      <h2 data-i18n="welcome_title">你好，我是 Chromium</h2>
+      <p data-i18n="welcome_desc">我可以帮你操作网页、回答问题或总结内容。</p>
+      <!-- 快捷建议词 -->
+      <div id="suggestions">
+        <div class="suggestion-chip" data-i18n="chip_summarize">总结这个页面</div>
+        <div class="suggestion-chip" data-i18n="chip_click_login">帮我点击登录按钮</div>
+        <div class="suggestion-chip" data-i18n="chip_what_page">这个页面是做什么的？</div>
+        <div class="suggestion-chip" data-i18n="chip_extract_links">提取页面中的链接</div>
+      </div>
+    </div>
+
+    <!-- 消息列表（动态填入）-->
+    <div id="messages"></div>
+
+  </div>
+
+  <!-- ── 底部输入区域 ── -->
+  <div id="footer">
+    <div id="input-box">
+      <!-- 当前模型信息栏 -->
+      <div id="model-bar">
+        <span id="model-info">加载配置中…</span>
+        <button id="btn-new" data-i18n-title="btn_new_title" title="新建对话">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+          </svg>
+        </button>
+        <button id="btn-settings" data-i18n-title="btn_settings_title" title="配置模型 / API Key">⚙</button>
+      </div>
+      <div id="attachments-bar">
+        <div id="attachments"></div>
+        <button id="btn-add-page" title="添加当前页面">+</button>
+      </div>
+      <div id="input-row">
+        <textarea id="agent-input" data-i18n-placeholder="input_placeholder" placeholder="向 Chromium 提问…" rows="1"></textarea>
+        <button id="agent-run" data-i18n-title="btn_send_title" title="发送">
+          <!-- 发送箭头 SVG -->
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div id="disclaimer" data-i18n="disclaimer">Chromium 可能会出错，请核实重要信息。</div>
+  </div>
+
+  <script src="i18n.js"></script>
+  <script src="github-auth.js"></script>
+  <script src="panel.js"></script>
+
+  <!-- ── 设置面板（iframe 内嵌 options.html） ── -->
+  <div id="settings-overlay">
+    <iframe id="settings-frame" src="options.html"></iframe>
+  </div>
+
+</body>
+</html>

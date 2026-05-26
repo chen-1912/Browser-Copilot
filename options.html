@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Chromium · 配置</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Google Sans', 'Segoe UI', sans-serif;
+      font-size: 14px;
+      background: #f8f9fa;
+      color: #202124;
+      padding: 32px 24px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 540px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 16px;
+      padding: 28px 28px 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #202124;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: #5f6368;
+      margin-bottom: 24px;
+    }
+
+    hr { border: none; border-top: 1px solid #e8eaed; margin: 20px 0; }
+
+    .section { margin-bottom: 20px; }
+
+    .section label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: #5f6368;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    select, input[type="text"], input[type="password"], input[type="number"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid #e8eaed;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      color: #202124;
+      background: #fff;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    select:focus, input:focus {
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 3px rgba(26,115,232,0.12);
+    }
+
+    .key-row { display: flex; gap: 8px; }
+    .key-row input { flex: 1; }
+
+    #toggle-key {
+      padding: 8px 12px;
+      border: 1.5px solid #e8eaed;
+      border-radius: 8px;
+      background: #fff;
+      cursor: pointer;
+      font-size: 15px;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    #toggle-key:hover { background: #f8f9fa; }
+
+    .field-desc {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #80868b;
+    }
+
+    /* ── textarea ── */
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid #e8eaed;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      color: #202124;
+      background: #fff;
+      outline: none;
+      resize: vertical;
+      line-height: 1.6;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    textarea:focus {
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 3px rgba(26,115,232,0.12);
+    }
+    textarea[readonly] {
+      background: #f8f9fa;
+      color: #5f6368;
+      cursor: default;
+      resize: none;
+    }
+
+    /* ── Skill 卡片 ── */
+    .skill-card {
+      border: 1.5px solid #e8eaed;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 8px;
+      background: #fafafa;
+    }
+    .skill-header {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+      align-items: center;
+    }
+    .skill-name { flex: 1; }
+    .skill-remove {
+      background: none;
+      border: 1.5px solid #e8eaed;
+      border-radius: 6px;
+      padding: 5px 10px;
+      cursor: pointer;
+      color: #5f6368;
+      font-size: 15px;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+    .skill-remove:hover { background: #fce8e6; border-color: #c62828; color: #c62828; }
+    #add-skill-btn {
+      width: 100%;
+      padding: 8px;
+      border: 1.5px dashed #dadce0;
+      border-radius: 8px;
+      background: none;
+      cursor: pointer;
+      color: #5f6368;
+      font-size: 13px;
+      font-family: inherit;
+      margin-top: 4px;
+      transition: all 0.15s;
+    }
+    #add-skill-btn:hover { border-color: #1a73e8; color: #1a73e8; background: #f8f9fa; }
+
+    /* ── 模型提示区 ── */
+    .hints-label {
+      font-size: 12px;
+      color: #5f6368;
+      margin: 8px 0 6px;
+    }
+
+    .hints {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .hint-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      background: #f1f3f4;
+      border: 1px solid #e8eaed;
+      border-radius: 12px;
+      padding: 4px 6px 4px 10px;
+      font-size: 11.5px;
+      font-family: 'Consolas', monospace;
+      color: #3c4043;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      user-select: none;
+    }
+
+    .hint-chip:hover {
+      background: #e8f0fe;
+      border-color: #1a73e8;
+      color: #1a73e8;
+    }
+
+    .hint-chip-remove {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      color: #9aa0a6;
+      font-size: 12px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0;
+      flex-shrink: 0;
+      transition: background 0.15s, color 0.15s;
+    }
+    .hint-chip-remove:hover { background: #fce8e6; color: #c62828; }
+
+    .hint-add-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 22px;
+      width: 22px;
+      border-radius: 11px;
+      border: 1px dashed #bdc1c6;
+      background: transparent;
+      color: #9aa0a6;
+      font-size: 13px;
+      line-height: 1;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .hint-add-btn:hover { border-color: #1a73e8; color: #1a73e8; }
+
+    /* ── 保存按钮区 ── */
+    .action-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .btn-save {
+      padding: 10px 28px;
+      background: #1a73e8;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn-save:hover  { background: #1558b0; }
+    .btn-save:active { transform: scale(0.97); }
+
+    #save-msg {
+      font-size: 13px;
+      color: #188038;
+      font-weight: 500;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    #save-msg.visible { opacity: 1; }
+
+    /* ── 侧边栏内嵌模式 ── */
+    #btn-back {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #5f6368;
+      font-size: 13px;
+      font-family: inherit;
+      padding: 0 0 14px;
+      font-weight: 500;
+      align-items: center;
+      gap: 4px;
+    }
+    #btn-back:hover { color: #1a73e8; }
+
+    body.in-panel {
+      padding: 0;
+      background: #fff;
+    }
+    body.in-panel .container {
+      max-width: 100%;
+      border-radius: 0;
+      box-shadow: none;
+      padding: 16px 16px 24px;
+    }
+    body.in-panel #btn-back { display: flex; }
+
+    #btn-back-bottom {
+      display: none;
+      background: #fff;
+      border: 1.5px solid #dadce0;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #5f6368;
+      font-size: 14px;
+      font-family: inherit;
+      padding: 10px 28px;
+      font-weight: 500;
+      align-items: center;
+      gap: 4px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    #btn-back-bottom:hover { color: #1a73e8; border-color: #1a73e8; }
+    body.in-panel #btn-back-bottom { display: inline-flex; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <button id="btn-back" data-i18n="btn_back">← 返回聊天</button>
+    <h1 data-i18n="settings_title">⚙ Chromium 配置</h1>
+    <p class="subtitle" data-i18n="settings_subtitle">选择 API 平台，填写模型名称和 API Key 后点击保存。切换平台时会自动加载对应已保存的 Key。</p>
+
+    <div class="section">
+      <label data-i18n="label_language">语言</label>
+      <select id="language-select">
+        <option value="zh">中文</option>
+        <option value="en" selected>English</option>
+      </select>
+    </div>
+
+    <div class="section">
+      <label data-i18n="label_provider">API 平台</label>
+      <select id="provider-select">
+        <option value="ollama">Ollama (本地)</option>
+        <option value="openrouter">OpenRouter</option>
+        <option value="deepseek" selected>DeepSeek</option>
+        <option value="aistudio">Google AI Studio</option>
+        <option value="copilot">GitHub Copilot</option>
+      </select>
+    </div>
+
+    <div class="section">
+      <label data-i18n="label_model">模型名称</label>
+      <input id="model-input" type="text" data-i18n-placeholder="model_placeholder" placeholder="输入模型名称" autocomplete="off" spellcheck="false" />
+      <div class="hints-label" data-i18n="hints_label">常用模型（点击填入）：</div>
+      <div id="model-hints" class="hints"></div>
+    </div>
+
+    <div class="section" id="apikey-section">
+      <label data-i18n="label_apikey">API Key</label>
+      <div class="key-row">
+        <input id="apikey-input" type="password" placeholder="" autocomplete="off" spellcheck="false" />
+        <button id="toggle-key" data-i18n-title="toggle_key_title" title="显示 / 隐藏">👁</button>
+      </div>
+      <div id="key-desc" class="field-desc"></div>
+    </div>
+
+    <!-- GitHub Copilot 设备授权（选择 copilot 平台时显示）-->
+    <div class="section" id="gh-copilot-section" style="display:none">
+      <label data-i18n="gh_label_auth">GitHub Copilot 授权</label>
+
+      <!-- 状态显示 -->
+      <div id="gh-status-text" class="field-desc" style="margin-bottom:10px"></div>
+
+      <!-- 设备授权流程（等待用户授权时显示）-->
+      <div id="gh-auth-flow" style="display:none;background:#f8f9fa;border-radius:8px;padding:14px;border:1px solid #e8eaed;margin-bottom:10px">
+        <div style="font-size:13px;color:#3c4043;margin-bottom:10px">
+          <span data-i18n="gh_code_tip">1. 请访问以下网址：</span>
+          <a id="gh-verify-link" href="#" target="_blank" rel="noopener noreferrer"
+            style="color:#1a73e8;font-weight:600;word-break:break-all"></a>
+        </div>
+        <div style="font-size:13px;color:#3c4043;margin-bottom:8px" data-i18n="gh_code_tip2">
+          2. 输入以下验证码：
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <code id="gh-user-code"
+            style="font-size:22px;font-weight:700;letter-spacing:4px;color:#1a73e8;background:#e8f0fe;padding:6px 14px;border-radius:6px"></code>
+          <button type="button" id="gh-copy-btn"
+            style="padding:5px 12px;border:1px solid #dadce0;border-radius:6px;background:#fff;cursor:pointer;font-size:12px;color:#3c4043"
+            data-i18n="gh_copy_code">复制</button>
+          <a id="gh-open-btn" href="#" target="_blank" rel="noopener noreferrer"
+            style="padding:5px 12px;border:1px solid #1a73e8;border-radius:6px;background:#fff;cursor:pointer;font-size:12px;color:#1a73e8;text-decoration:none"
+            data-i18n="gh_open_github">打开授权页面</a>
+        </div>
+        <div id="gh-waiting-text" class="field-desc" data-i18n="gh_waiting">等待授权中…</div>
+      </div>
+
+      <!-- 操作按钮 -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button type="button" id="gh-connect-btn"
+          style="padding:7px 16px;background:#1a73e8;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px"
+          data-i18n="gh_connect_btn">连接 GitHub 账号</button>
+        <button type="button" id="gh-disconnect-btn"
+          style="padding:7px 16px;background:#fff;color:#d93025;border:1px solid #d93025;border-radius:8px;cursor:pointer;font-size:13px;display:none"
+          data-i18n="gh_disconnect">断开连接</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <label style="margin-bottom:0" data-i18n="label_system_prompt">系统提示词（System Prompt）</label>
+        <button type="button" id="reset-prompt-btn" style="padding:3px 10px;border:1px solid #dadce0;border-radius:6px;background:#fff;cursor:pointer;font-size:12px;color:#5f6368;font-family:inherit;flex-shrink:0;" data-i18n="btn_reset_prompt">恢复默认</button>
+      </div>
+      <textarea id="system-prompt" rows="7" spellcheck="false" autocomplete="off" data-i18n-placeholder="sys_prompt_ph"></textarea>
+      <div class="field-desc" data-i18n="sys_prompt_desc">可自定义系统提示词，留空则不传给模型。</div>
+    </div>
+
+    <div class="section">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <label style="margin-bottom:0" data-i18n="label_loop_feedback">循环反馈提示词（Loop Feedback Prompt）</label>
+        <button type="button" id="reset-loop-feedback-btn" style="padding:3px 10px;border:1px solid #dadce0;border-radius:6px;background:#fff;cursor:pointer;font-size:12px;color:#5f6368;font-family:inherit;flex-shrink:0;" data-i18n="btn_reset_loop_feedback">恢复默认</button>
+      </div>
+      <textarea id="loop-feedback-prompt" rows="4" spellcheck="false" autocomplete="off" data-i18n-placeholder="loop_feedback_ph"></textarea>
+      <div class="field-desc" data-i18n="loop_feedback_desc">每轮 Agent 操作执行完毕后发回给模型的指令。{{actions}} 会替换为本轮执行的动作摘要。留空则不发送续接消息。</div>
+    </div>
+
+    <div class="section">
+      <label data-i18n="label_skills">自定义 Skills</label>
+      <div id="skills-list"></div>
+      <button type="button" id="add-skill-btn" data-i18n="btn_add_skill">＋ 添加 Skill</button>
+      <div class="field-desc" data-i18n="skills_desc">每个 Skill 的名称和内容会以列表形式追加到系统提示词末尾，一起发送给模型。</div>
+    </div>
+
+    <div class="section">
+      <label data-i18n="label_history_rounds">历史对话轮数</label>
+      <input id="history-rounds" type="number" min="0" data-i18n-placeholder="history_rounds_ph" placeholder="0（不保留历史）" />
+      <div class="field-desc" data-i18n="history_rounds_desc">发送消息时携带前面多少轮对话作为上下文。<b>0</b> = 不保留；遇到 Agent 操作轮时自动截断。</div>
+    </div>
+
+    <div class="section">
+      <label data-i18n="label_agent_max_steps">Agent 最大步数</label>
+      <input id="agent-max-steps" type="number" min="1" data-i18n-placeholder="agent_max_steps_ph" placeholder="留空表示不限制" />
+      <div class="field-desc" data-i18n="agent_max_steps_desc">Agent 连续自动执行操作的最大步数。留空或 0 表示不限制。</div>
+    </div>
+
+    <div class="section">
+      <label data-i18n="label_action_delay">动作延迟（毫秒）</label>
+      <input id="action-delay" type="number" min="0" data-i18n-placeholder="action_delay_ph" placeholder="500（默认）" />
+      <div class="field-desc" data-i18n="action_delay_desc">每个动作执行完毕后等待的时间（ms）。增大此值可避免操作过快导致页面未响应。留空或 0 表示不延迟。</div>
+    </div>
+
+    <hr />
+
+    <div class="action-row">
+      <button class="btn-save" id="save-btn" data-i18n="btn_save">保存</button>
+      <button id="btn-back-bottom" data-i18n="btn_back_bottom">返回</button>
+      <span id="save-msg" data-i18n="save_success">✓ 已保存</span>
+    </div>
+  </div>
+
+  <script src="github-auth.js"></script>
+  <script src="i18n.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>
