@@ -1,6 +1,6 @@
 # Chromium Sidebar AI Assistant
 
-Chromium Sidebar AI Assistant is a browser sidebar companion that allows you to bring your own API keys. It can help you summarize web pages and perform simple automation tasks.
+Chromium Sidebar AI Assistant is a browser sidebar companion that allows you to bring your own API keys. It can help you summarize web pages and perform simple automation tasks. Just drag and drop the unzipped folder into chrome://extensions/ (with Developer mode enabled), and you're good to go!
 
 The assistant supports the following atomic actions:
 
