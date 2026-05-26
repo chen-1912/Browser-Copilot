@@ -19,7 +19,7 @@ The assistant supports the following atomic actions:
 | **Hover** | `{"type":"hover","selector":".menu-item"}` |
 | **Clear** | `{"type":"clear","selector":"input#search"}` |
 
-By customizing **Skills**, you can orchestrate these atomic actions to handle more complex workflows. For example, I often use it to clean up my incredibly messy browser bookmarks.
+By customizing **Skills**, you can orchestrate these atomic actions to handle more complex workflows. For example, I use it to clean up my incredibly messy bookmarks:
 
 
 https://github.com/user-attachments/assets/e5c9e846-9f95-48e1-b1c8-a6a50472d4ea
