@@ -1,6 +1,6 @@
 # Chromium Sidebar AI Assistant
 
-Chromium is a browser sidebar companion that allows you to summarize web pages or perform simple automation tasks through your own models or API. Just drag and drop the unzipped folder into chrome://extensions/ (with Developer mode enabled), and you're good to go!
+Chromium is a simple browser sidebar agent that helps you with summarizing web pages or performing simple automation tasks. Just drag and drop the unzipped folder into chrome://extensions/ (with Developer mode enabled), and you're good to go!
 
 The assistant supports the following atomic actions:
 
