@@ -4,7 +4,7 @@ _Last updated: June 2026_
 
 ## Overview
 
-Mini Browser Agent ("the Extension") is a browser-side AI assistant that helps users interact with web pages through natural language. This policy explains what data the Extension handles and how.
+Chromium ("the Extension") is a browser-side AI assistant that helps users interact with web pages through natural language. This policy explains what data the Extension handles and how.
 
 ## Data We Do NOT Collect
 
