@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "Chromium",
   "version": "1.0",
-  "description": "Minimal browser agent",
-  "permissions": ["activeTab", "scripting", "sidePanel", "contextMenus", "storage", "tabs"],
+  "description": "A simple browser sidebar agent that helps you with summarizing web pages or performing simple automation tasks.",
+  "permissions": ["activeTab", "scripting", "sidePanel", "contextMenus", "storage"],
   "host_permissions": ["<all_urls>"],
   "content_scripts": [
     {
