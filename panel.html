@@ -10,14 +10,56 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --blue:    #1a73e8;   /* Google 蓝 */
-      --bg:      #ffffff;
-      --surface: #f8f9fa;   /* 顶栏/底栏浅灰 */
-      --border:  #e8eaed;
-      --text:    #202124;
-      --muted:   #5f6368;
-      --user-bg: #e8f0fe;   /* 用户气泡淡蓝 */
+      --blue: #1a73e8;
+      --blue-hover: #1558b0;
+      --bg: #ffffff;
+      --surface: #f8f9fa;
+      --surface-2: #f1f3f4;
+      --border: #e8eaed;
+      --border-strong: #dadce0;
+      --text: #202124;
+      --muted: #5f6368;
+      --muted-2: #80868b;
+      --user-bg: #e8f0fe;
       --user-fg: #1a1a1a;
+      --danger: #c62828;
+      --danger-bg: #fce8e6;
+      --warning: #b36200;
+      --overlay: rgba(0,0,0,0.55);
+      --shadow: 0 1px 6px rgba(0,0,0,0.08);
+      --focus-shadow: 0 1px 10px rgba(26,115,232,0.18);
+      --accent-soft: rgba(26,115,232,0.06);
+      --modal-panel: #ffffff;
+      --modal-header: #f8f9fa;
+      --modal-text: #202124;
+      --modal-code: #202124;
+    }
+
+    body[data-theme="dark"] {
+      color-scheme: dark;
+      --blue: #8ab4f8;
+      --blue-hover: #a8c7fa;
+      --bg: #202124;
+      --surface: #292a2d;
+      --surface-2: #303134;
+      --border: #3c4043;
+      --border-strong: #5f6368;
+      --text: #e8eaed;
+      --muted: #9aa0a6;
+      --muted-2: #bdc1c6;
+      --user-bg: #25374f;
+      --user-fg: #e8eaed;
+      --danger: #f28b82;
+      --danger-bg: #3b2222;
+      --warning: #f6c453;
+      --overlay: rgba(0,0,0,0.62);
+      --shadow: 0 1px 8px rgba(0,0,0,0.32);
+      --focus-shadow: 0 1px 10px rgba(138,180,248,0.22);
+      --accent-soft: rgba(138,180,248,0.12);
+      --modal-panel: #292a2d;
+      --modal-header: #303134;
+      --modal-text: #e8eaed;
+      --modal-code: #e8eaed;
     }
 
     html, body {
@@ -202,12 +244,12 @@
       border-radius: 26px;
       padding: 8px 8px 8px 16px;
       background: var(--bg);
-      box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+      box-shadow: var(--shadow);
       transition: border-color 0.2s, box-shadow 0.2s;
     }
     #input-box:focus-within {
       border-color: var(--blue);
-      box-shadow: 0 1px 10px rgba(26,115,232,0.18);
+      box-shadow: var(--focus-shadow);
     }
     /* 输入行：textarea + 发送按钮 */
     #input-row {
@@ -241,7 +283,7 @@
       flex-shrink: 0;
       transition: border-color 0.15s, color 0.15s, background 0.15s;
     }
-    #btn-add-page:hover { border-color: var(--blue); color: var(--blue); background: rgba(26,115,232,0.06); }
+    #btn-add-page:hover { border-color: var(--blue); color: var(--blue); background: var(--accent-soft); }
     .file-chip {
       display: inline-flex;
       align-items: center;
@@ -274,11 +316,11 @@
       border-radius: 50%;
       transition: color 0.15s, background 0.15s;
     }
-    .file-chip-remove:hover { color: #c62828; background: #fce8e6; }
+    .file-chip-remove:hover { color: var(--danger); background: var(--danger-bg); }
     /* 拖放悬停高亮 */
     #footer.drag-over #input-box {
       border-color: var(--blue);
-      background: rgba(26,115,232,0.05);
+      background: var(--accent-soft);
     }
     /* ─────────────── 当前模型信息栏 ─────────────── */
     #model-bar {
@@ -362,11 +404,11 @@
       flex-shrink: 0;
       transition: background 0.15s, transform 0.1s;
     }
-    #agent-run:hover  { background: #1558b0; }
+    #agent-run:hover  { background: var(--blue-hover); }
     #agent-run:active { transform: scale(0.93); }
     /* 禁用状态（发送中）*/
     #agent-run:disabled {
-      background: var(--border);
+      background: var(--surface-2);
       color: var(--muted);
       cursor: not-allowed;
     }
@@ -387,7 +429,7 @@
       inset: 0;
       z-index: 200;
       flex-direction: column;
-      background: #fff;
+      background: var(--bg);
     }
     #settings-frame {
       flex: 1;

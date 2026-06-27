@@ -6,11 +6,64 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --blue: #1a73e8;
+      --blue-hover: #1558b0;
+      --bg: #f8f9fa;
+      --surface: #fff;
+      --surface-2: #fafafa;
+      --surface-3: #f1f3f4;
+      --surface-readonly: #f8f9fa;
+      --border: #e8eaed;
+      --border-strong: #dadce0;
+      --text: #202124;
+      --muted: #5f6368;
+      --muted-2: #80868b;
+      --chip-text: #3c4043;
+      --chip-border: #bdc1c6;
+      --accent-soft: #e8f0fe;
+      --accent-soft-2: #f8f9fa;
+      --focus-ring: rgba(26,115,232,0.12);
+      --success: #188038;
+      --success-strong: #1e8e3e;
+      --danger: #c62828;
+      --danger-strong: #d93025;
+      --danger-bg: #fce8e6;
+      --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+
+    body[data-theme="dark"] {
+      color-scheme: dark;
+      --blue: #8ab4f8;
+      --blue-hover: #a8c7fa;
+      --bg: #202124;
+      --surface: #292a2d;
+      --surface-2: #303134;
+      --surface-3: #35363a;
+      --surface-readonly: #303134;
+      --border: #3c4043;
+      --border-strong: #5f6368;
+      --text: #e8eaed;
+      --muted: #9aa0a6;
+      --muted-2: #bdc1c6;
+      --chip-text: #e8eaed;
+      --chip-border: #5f6368;
+      --accent-soft: rgba(138,180,248,0.16);
+      --accent-soft-2: rgba(138,180,248,0.08);
+      --focus-ring: rgba(138,180,248,0.24);
+      --success: #81c995;
+      --success-strong: #81c995;
+      --danger: #f28b82;
+      --danger-strong: #f28b82;
+      --danger-bg: #3b2222;
+      --shadow: 0 2px 14px rgba(0,0,0,0.32);
+    }
+
     body {
       font-family: 'Google Sans', 'Segoe UI', sans-serif;
       font-size: 14px;
-      background: #f8f9fa;
-      color: #202124;
+      background: var(--bg);
+      color: var(--text);
       padding: 32px 24px;
       min-height: 100vh;
     }
@@ -18,26 +71,26 @@
     .container {
       max-width: 540px;
       margin: 0 auto;
-      background: #fff;
+      background: var(--surface);
       border-radius: 16px;
       padding: 28px 28px 24px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      box-shadow: var(--shadow);
     }
 
     h1 {
       font-size: 20px;
       font-weight: 600;
       margin-bottom: 6px;
-      color: #202124;
+      color: var(--text);
     }
 
     .subtitle {
       font-size: 13px;
-      color: #5f6368;
+      color: var(--muted);
       margin-bottom: 24px;
     }
 
-    hr { border: none; border-top: 1px solid #e8eaed; margin: 20px 0; }
+    hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
 
     .section { margin-bottom: 20px; }
 
@@ -45,7 +98,7 @@
       display: block;
       font-size: 11px;
       font-weight: 600;
-      color: #5f6368;
+      color: var(--muted);
       text-transform: uppercase;
       letter-spacing: 0.5px;
       margin-bottom: 6px;
@@ -54,19 +107,19 @@
     select, input[type="text"], input[type="password"], input[type="number"] {
       width: 100%;
       padding: 10px 12px;
-      border: 1.5px solid #e8eaed;
+      border: 1.5px solid var(--border);
       border-radius: 8px;
       font-size: 14px;
       font-family: inherit;
-      color: #202124;
-      background: #fff;
+      color: var(--text);
+      background: var(--surface);
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
     }
 
     select:focus, input:focus {
-      border-color: #1a73e8;
-      box-shadow: 0 0 0 3px rgba(26,115,232,0.12);
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px var(--focus-ring);
     }
 
     .key-row { display: flex; gap: 8px; }
@@ -74,55 +127,65 @@
 
     #toggle-key {
       padding: 8px 12px;
-      border: 1.5px solid #e8eaed;
+      border: 1.5px solid var(--border);
       border-radius: 8px;
-      background: #fff;
+      background: var(--surface);
       cursor: pointer;
-      font-size: 15px;
+      width: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       flex-shrink: 0;
-      transition: background 0.15s;
+      color: var(--text);
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
     }
-    #toggle-key:hover { background: #f8f9fa; }
+    #toggle-key:hover { background: var(--surface-2); border-color: var(--blue); color: var(--blue); }
+
+    #toggle-key img {
+      width: 18px;
+      height: 18px;
+      display: block;
+    }
 
     .field-desc {
       margin-top: 6px;
       font-size: 12px;
-      color: #80868b;
+      color: var(--muted-2);
     }
 
     /* ── textarea ── */
     textarea {
       width: 100%;
       padding: 10px 12px;
-      border: 1.5px solid #e8eaed;
+      border: 1.5px solid var(--border);
       border-radius: 8px;
       font-size: 12.5px;
       font-family: 'Consolas', 'Courier New', monospace;
-      color: #202124;
-      background: #fff;
+      color: var(--text);
+      background: var(--surface);
       outline: none;
       resize: vertical;
       line-height: 1.6;
       transition: border-color 0.2s, box-shadow 0.2s;
     }
     textarea:focus {
-      border-color: #1a73e8;
-      box-shadow: 0 0 0 3px rgba(26,115,232,0.12);
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px var(--focus-ring);
     }
     textarea[readonly] {
-      background: #f8f9fa;
-      color: #5f6368;
+      background: var(--surface-readonly);
+      color: var(--muted);
       cursor: default;
       resize: none;
     }
 
     /* ── Skill 卡片 ── */
     .skill-card {
-      border: 1.5px solid #e8eaed;
+      border: 1.5px solid var(--border);
       border-radius: 8px;
       padding: 12px;
       margin-bottom: 8px;
-      background: #fafafa;
+      background: var(--surface-2);
     }
     .skill-header {
       display: flex;
@@ -133,35 +196,35 @@
     .skill-name { flex: 1; }
     .skill-remove {
       background: none;
-      border: 1.5px solid #e8eaed;
+      border: 1.5px solid var(--border);
       border-radius: 6px;
       padding: 5px 10px;
       cursor: pointer;
-      color: #5f6368;
+      color: var(--muted);
       font-size: 15px;
       flex-shrink: 0;
       transition: all 0.15s;
     }
-    .skill-remove:hover { background: #fce8e6; border-color: #c62828; color: #c62828; }
+    .skill-remove:hover { background: var(--danger-bg); border-color: var(--danger); color: var(--danger); }
     #add-skill-btn {
       width: 100%;
       padding: 8px;
-      border: 1.5px dashed #dadce0;
+      border: 1.5px dashed var(--border-strong);
       border-radius: 8px;
       background: none;
       cursor: pointer;
-      color: #5f6368;
+      color: var(--muted);
       font-size: 13px;
       font-family: inherit;
       margin-top: 4px;
       transition: all 0.15s;
     }
-    #add-skill-btn:hover { border-color: #1a73e8; color: #1a73e8; background: #f8f9fa; }
+    #add-skill-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--accent-soft-2); }
 
     /* ── 模型提示区 ── */
     .hints-label {
       font-size: 12px;
-      color: #5f6368;
+      color: var(--muted);
       margin: 8px 0 6px;
     }
 
@@ -176,22 +239,22 @@
       display: inline-flex;
       align-items: center;
       gap: 3px;
-      background: #f1f3f4;
-      border: 1px solid #e8eaed;
+      background: var(--surface-3);
+      border: 1px solid var(--border);
       border-radius: 12px;
       padding: 4px 6px 4px 10px;
       font-size: 11.5px;
       font-family: 'Consolas', monospace;
-      color: #3c4043;
+      color: var(--chip-text);
       cursor: pointer;
       transition: background 0.15s, border-color 0.15s, color 0.15s;
       user-select: none;
     }
 
     .hint-chip:hover {
-      background: #e8f0fe;
-      border-color: #1a73e8;
-      color: #1a73e8;
+      background: var(--accent-soft);
+      border-color: var(--blue);
+      color: var(--blue);
     }
 
     .hint-chip-remove {
@@ -203,7 +266,7 @@
       border-radius: 50%;
       border: none;
       background: transparent;
-      color: #9aa0a6;
+      color: var(--muted);
       font-size: 12px;
       line-height: 1;
       cursor: pointer;
@@ -211,7 +274,7 @@
       flex-shrink: 0;
       transition: background 0.15s, color 0.15s;
     }
-    .hint-chip-remove:hover { background: #fce8e6; color: #c62828; }
+    .hint-chip-remove:hover { background: var(--danger-bg); color: var(--danger); }
 
     .hint-add-btn {
       display: inline-flex;
@@ -220,16 +283,105 @@
       height: 22px;
       width: 22px;
       border-radius: 11px;
-      border: 1px dashed #bdc1c6;
+      border: 1px dashed var(--chip-border);
       background: transparent;
-      color: #9aa0a6;
+      color: var(--muted);
       font-size: 13px;
       line-height: 1;
       cursor: pointer;
       flex-shrink: 0;
       transition: border-color 0.15s, color 0.15s;
     }
-    .hint-add-btn:hover { border-color: #1a73e8; color: #1a73e8; }
+    .hint-add-btn:hover { border-color: var(--blue); color: var(--blue); }
+
+    .secondary-btn {
+      padding: 3px 10px;
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--muted);
+      font-family: inherit;
+      flex-shrink: 0;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+    .secondary-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--accent-soft-2); }
+
+    .inline-card {
+      display: none;
+      background: var(--surface-2);
+      border-radius: 8px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      margin-bottom: 10px;
+    }
+
+    .inline-row-text {
+      font-size: 13px;
+      color: var(--chip-text);
+      margin-bottom: 10px;
+    }
+
+    .inline-link {
+      color: var(--blue);
+      font-weight: 600;
+      word-break: break-all;
+    }
+
+    .inline-code {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      color: var(--blue);
+      background: var(--accent-soft);
+      padding: 6px 14px;
+      border-radius: 6px;
+    }
+
+    .mini-btn {
+      padding: 5px 12px;
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--chip-text);
+      text-decoration: none;
+      font-family: inherit;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+    .mini-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--accent-soft-2); }
+
+    .mini-btn-primary { border-color: var(--blue); color: var(--blue); }
+
+    .primary-btn {
+      padding: 7px 16px;
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background 0.15s;
+    }
+    .primary-btn:hover { background: var(--blue-hover); }
+
+    .danger-btn {
+      padding: 7px 16px;
+      background: var(--surface);
+      color: var(--danger-strong);
+      border: 1px solid var(--danger-strong);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
 
     /* ── 保存按钮区 ── */
     .action-row {
@@ -241,7 +393,7 @@
 
     .btn-save {
       padding: 10px 28px;
-      background: #1a73e8;
+      background: var(--blue);
       color: #fff;
       border: none;
       border-radius: 8px;
@@ -251,12 +403,12 @@
       font-family: inherit;
       transition: background 0.15s, transform 0.1s;
     }
-    .btn-save:hover  { background: #1558b0; }
+    .btn-save:hover  { background: var(--blue-hover); }
     .btn-save:active { transform: scale(0.97); }
 
     #save-msg {
       font-size: 13px;
-      color: #188038;
+      color: var(--success);
       font-weight: 500;
       opacity: 0;
       transition: opacity 0.3s;
@@ -269,7 +421,7 @@
       background: none;
       border: none;
       cursor: pointer;
-      color: #5f6368;
+      color: var(--muted);
       font-size: 13px;
       font-family: inherit;
       padding: 0 0 14px;
@@ -277,11 +429,11 @@
       align-items: center;
       gap: 4px;
     }
-    #btn-back:hover { color: #1a73e8; }
+    #btn-back:hover { color: var(--blue); }
 
     body.in-panel {
       padding: 0;
-      background: #fff;
+      background: var(--surface);
     }
     body.in-panel .container {
       max-width: 100%;
@@ -293,11 +445,11 @@
 
     #btn-back-bottom {
       display: none;
-      background: #fff;
-      border: 1.5px solid #dadce0;
+      background: var(--surface);
+      border: 1.5px solid var(--border-strong);
       border-radius: 8px;
       cursor: pointer;
-      color: #5f6368;
+      color: var(--muted);
       font-size: 14px;
       font-family: inherit;
       padding: 10px 28px;
@@ -306,7 +458,7 @@
       gap: 4px;
       transition: color 0.15s, border-color 0.15s;
     }
-    #btn-back-bottom:hover { color: #1a73e8; border-color: #1a73e8; }
+    #btn-back-bottom:hover { color: var(--blue); border-color: var(--blue); }
     body.in-panel #btn-back-bottom { display: inline-flex; }
   </style>
 </head>
@@ -325,11 +477,22 @@
     </div>
 
     <div class="section">
+      <label data-i18n="label_theme">主题</label>
+      <select id="theme-select">
+        <option value="device" data-i18n="theme_device">系统</option>
+        <option value="light" data-i18n="theme_light">浅色</option>
+        <option value="dark" data-i18n="theme_dark">暗色</option>
+      </select>
+    </div>
+
+    <div class="section">
       <label data-i18n="label_provider">API 平台</label>
       <select id="provider-select">
         <option value="ollama">Ollama</option>
+        <option value="cliproxy">CLI Proxy API</option>
         <option value="openrouter">OpenRouter</option>
         <option value="deepseek" selected>DeepSeek</option>
+        <option value="siliconflow">SiliconFlow</option>
         <option value="aistudio">Google AI Studio</option>
         <option value="copilot">GitHub Copilot</option>
       </select>
@@ -346,9 +509,17 @@
       <label data-i18n="label_apikey">API Key</label>
       <div class="key-row">
         <input id="apikey-input" type="password" placeholder="" autocomplete="off" spellcheck="false" />
-        <button id="toggle-key" data-i18n-title="toggle_key_title" title="显示 / 隐藏">👁</button>
+        <button id="toggle-key" type="button" data-i18n-title="toggle_key_title" title="显示 / 隐藏">
+          <img id="toggle-key-icon" src="assets/icons/show.svg" alt="Show password" />
+        </button>
       </div>
       <div id="key-desc" class="field-desc"></div>
+    </div>
+
+    <div class="section" id="endpoint-section" style="display:none">
+      <label data-i18n="label_endpoint">端点地址</label>
+      <input id="endpoint-input" type="text" data-i18n-placeholder="endpoint_ph_cli_proxy" placeholder="https://your-proxy.example.com/v1/chat/completions" autocomplete="off" spellcheck="false" />
+      <div id="endpoint-desc" class="field-desc" data-i18n="endpoint_desc_cli_proxy">CLI Proxy API 的聊天补全接口地址。通常填写完整的 OpenAI 兼容 chat/completions 端点。</div>
     </div>
 
     <!-- GitHub Copilot 设备授权（选择 copilot 平台时显示）-->
@@ -359,43 +530,33 @@
       <div id="gh-status-text" class="field-desc" style="margin-bottom:10px"></div>
 
       <!-- 设备授权流程（等待用户授权时显示）-->
-      <div id="gh-auth-flow" style="display:none;background:#f8f9fa;border-radius:8px;padding:14px;border:1px solid #e8eaed;margin-bottom:10px">
-        <div style="font-size:13px;color:#3c4043;margin-bottom:10px">
+      <div id="gh-auth-flow" class="inline-card">
+        <div class="inline-row-text">
           <span data-i18n="gh_code_tip">1. 请访问以下网址：</span>
-          <a id="gh-verify-link" href="#" target="_blank" rel="noopener noreferrer"
-            style="color:#1a73e8;font-weight:600;word-break:break-all"></a>
+          <a id="gh-verify-link" href="#" target="_blank" rel="noopener noreferrer" class="inline-link"></a>
         </div>
-        <div style="font-size:13px;color:#3c4043;margin-bottom:8px" data-i18n="gh_code_tip2">
+        <div class="inline-row-text" style="margin-bottom:8px" data-i18n="gh_code_tip2">
           2. 输入以下验证码：
         </div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-          <code id="gh-user-code"
-            style="font-size:22px;font-weight:700;letter-spacing:4px;color:#1a73e8;background:#e8f0fe;padding:6px 14px;border-radius:6px"></code>
-          <button type="button" id="gh-copy-btn"
-            style="padding:5px 12px;border:1px solid #dadce0;border-radius:6px;background:#fff;cursor:pointer;font-size:12px;color:#3c4043"
-            data-i18n="gh_copy_code">复制</button>
-          <a id="gh-open-btn" href="#" target="_blank" rel="noopener noreferrer"
-            style="padding:5px 12px;border:1px solid #1a73e8;border-radius:6px;background:#fff;cursor:pointer;font-size:12px;color:#1a73e8;text-decoration:none"
-            data-i18n="gh_open_github">打开授权页面</a>
+          <code id="gh-user-code" class="inline-code"></code>
+          <button type="button" id="gh-copy-btn" class="mini-btn" data-i18n="gh_copy_code">复制</button>
+          <a id="gh-open-btn" href="#" target="_blank" rel="noopener noreferrer" class="mini-btn mini-btn-primary" data-i18n="gh_open_github">打开授权页面</a>
         </div>
         <div id="gh-waiting-text" class="field-desc" data-i18n="gh_waiting">等待授权中…</div>
       </div>
 
       <!-- 操作按钮 -->
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button type="button" id="gh-connect-btn"
-          style="padding:7px 16px;background:#1a73e8;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px"
-          data-i18n="gh_connect_btn">连接 GitHub 账号</button>
-        <button type="button" id="gh-disconnect-btn"
-          style="padding:7px 16px;background:#fff;color:#d93025;border:1px solid #d93025;border-radius:8px;cursor:pointer;font-size:13px;display:none"
-          data-i18n="gh_disconnect">断开连接</button>
+      <div class="button-row">
+        <button type="button" id="gh-connect-btn" class="primary-btn" data-i18n="gh_connect_btn">连接 GitHub 账号</button>
+        <button type="button" id="gh-disconnect-btn" class="danger-btn" style="display:none" data-i18n="gh_disconnect">断开连接</button>
       </div>
     </div>
 
     <div class="section">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
         <label style="margin-bottom:0" data-i18n="label_system_prompt">系统提示词（System Prompt）</label>
-        <button type="button" id="reset-prompt-btn" style="padding:3px 10px;border:1px solid #dadce0;border-radius:6px;background:#fff;cursor:pointer;font-size:12px;color:#5f6368;font-family:inherit;flex-shrink:0;" data-i18n="btn_reset_prompt">恢复默认</button>
+        <button type="button" id="reset-prompt-btn" class="secondary-btn" data-i18n="btn_reset_prompt">恢复默认</button>
       </div>
       <textarea id="system-prompt" rows="7" spellcheck="false" autocomplete="off" data-i18n-placeholder="sys_prompt_ph"></textarea>
       <div class="field-desc" data-i18n="sys_prompt_desc">可自定义系统提示词，留空则不传给模型。</div>
@@ -404,7 +565,7 @@
     <div class="section">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
         <label style="margin-bottom:0" data-i18n="label_loop_feedback">循环反馈提示词（Loop Feedback Prompt）</label>
-        <button type="button" id="reset-loop-feedback-btn" style="padding:3px 10px;border:1px solid #dadce0;border-radius:6px;background:#fff;cursor:pointer;font-size:12px;color:#5f6368;font-family:inherit;flex-shrink:0;" data-i18n="btn_reset_loop_feedback">恢复默认</button>
+        <button type="button" id="reset-loop-feedback-btn" class="secondary-btn" data-i18n="btn_reset_loop_feedback">恢复默认</button>
       </div>
       <textarea id="loop-feedback-prompt" rows="4" spellcheck="false" autocomplete="off" data-i18n-placeholder="loop_feedback_ph"></textarea>
       <div class="field-desc" data-i18n="loop_feedback_desc">每轮 Agent 操作执行完毕后发回给模型的指令。{{actions}} 会替换为本轮执行的动作摘要。留空则不发送续接消息。</div>

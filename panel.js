@@ -5,6 +5,8 @@
 I18n.setLang('en');
 I18n.apply();
 
+const systemThemeMedia = window.matchMedia('(prefers-color-scheme: dark)');
+
 // ── Provider 配置（纯前端，无需服务器）─────────────────────────
 const PROVIDERS = {
   ollama: {
@@ -12,6 +14,13 @@ const PROVIDERS = {
     format:     "openai",
     url:        "http://localhost:11434/v1/chat/completions",
     defaultKey: "ollama",
+  },
+  cliproxy: {
+    name:       "CLI Proxy API",
+    format:     "openai",
+    url:        "",
+    defaultKey: "",
+    needsEndpoint: true,
   },
   openrouter: {
     name:       "OpenRouter",
@@ -23,6 +32,12 @@ const PROVIDERS = {
     name:       "DeepSeek",
     format:     "openai",
     url:        "https://api.deepseek.com/chat/completions",
+    defaultKey: "",
+  },
+  siliconflow: {
+    name:       "SiliconFlow",
+    format:     "openai",
+    url:        "https://api.siliconflow.cn/v1/chat/completions",
     defaultKey: "",
   },
   aistudio: {
@@ -67,7 +82,9 @@ const SYSTEM_PROMPT =
 const DEFAULT_CONFIG = {
   provider: "deepseek",
   model:    "deepseek-v4-flash",
-  apiKeys:  { ollama: "ollama", openrouter: "", deepseek: "", aistudio: "", copilot: "" },
+  apiKeys:  { ollama: "ollama", cliproxy: "", openrouter: "", deepseek: "", siliconflow: "", aistudio: "", copilot: "" },
+  endpoints:{ cliproxy: "" },
+  theme:    "light",
 };
 
 // 每轮 action 执行完毕后反馈给模型的续接提示（{{actions}} 替换为动作执行摘要）
@@ -87,6 +104,8 @@ async function loadConfig() {
         provider:      stored.provider     || DEFAULT_CONFIG.provider,
         model:         stored.model        || DEFAULT_CONFIG.model,
         apiKeys:       Object.assign({}, DEFAULT_CONFIG.apiKeys, stored.apiKeys || {}),
+        endpoints:     Object.assign({}, DEFAULT_CONFIG.endpoints, stored.endpoints || {}),
+        theme:         normalizeTheme(stored.theme),
         systemPrompt:  stored.systemPrompt ?? SYSTEM_PROMPT,
         skills:        Array.isArray(stored.skills) ? stored.skills : [],
         language:      stored.userLang || 'en',
@@ -194,8 +213,8 @@ async function restoreSession() {
             if (i > 0) {
               const sep = document.createElement('div');
               sep.style.cssText = [
-                'margin:6px 0 4px', 'border-top:1px dashed #e8eaed',
-                'font-size:11px', 'color:#80868b', 'padding-top:4px',
+                'margin:6px 0 4px', `border-top:1px dashed ${themeVar('--border')}`,
+                'font-size:11px', `color:${themeVar('--muted-2')}`, 'padding-top:4px',
               ].join(';');
               sep.textContent = '↩ Continuing…';
               content.appendChild(sep);
@@ -209,8 +228,8 @@ async function restoreSession() {
               const chip = document.createElement('div');
               chip.style.cssText = [
                 'margin-top:8px', 'padding:5px 10px',
-                'background:#f1f3f4', 'border-left:3px solid #1a73e8',
-                'border-radius:4px', 'font-size:11.5px', 'color:#3c4043',
+                `background:${themeVar('--surface-2')}`, `border-left:3px solid ${themeVar('--blue')}`,
+                'border-radius:4px', 'font-size:11.5px', `color:${themeVar('--text')}`,
                 'font-family:Consolas,monospace', 'word-break:break-all',
               ].join(';');
               chip.textContent = '⚡ ' + actionStr;
@@ -260,6 +279,7 @@ const btnAddPage    = document.getElementById("btn-add-page");
 
 // ── 初始化：显示当前配置 ──
 loadConfig().then(cfg => {
+  applyTheme(cfg.theme);
   if (I18n.lang !== cfg.language) {
     I18n.setLang(cfg.language);
     I18n.apply();
@@ -411,6 +431,26 @@ function renderMarkdown(text) {
   return typeof marked !== "undefined" ? marked.parse(text) : text;
 }
 
+function normalizeTheme(theme) {
+  return theme === 'dark' || theme === 'light' || theme === 'device' ? theme : DEFAULT_CONFIG.theme;
+}
+
+function resolveTheme(theme) {
+  const normalizedTheme = normalizeTheme(theme);
+  if (normalizedTheme === 'device') {
+    return systemThemeMedia.matches ? 'dark' : 'light';
+  }
+  return normalizedTheme;
+}
+
+function applyTheme(theme) {
+  document.body.dataset.theme = resolveTheme(theme);
+}
+
+function themeVar(name) {
+  return getComputedStyle(document.body).getPropertyValue(name).trim();
+}
+
 // ─────────────────────────────────────────────
 // 辅助：切换发送/停止按鈕状态
 // ─────────────────────────────────────────────
@@ -420,7 +460,7 @@ const STOP_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="current
 function setRunBtnState(state) {
   if (state === 'stop') {
     runBtn.innerHTML  = STOP_ICON;
-    runBtn.style.background = '#5f6368';
+    runBtn.style.background = themeVar('--muted');
     runBtn.disabled   = false;
   } else {
     runBtn.innerHTML  = SEND_ICON;
@@ -477,26 +517,34 @@ function injectPageIntoMessages(messages, pageFileOverride) {
 function showPayloadModal(payload) {
   document.getElementById('_payload_overlay')?.remove();
 
+  const border = themeVar('--border');
+  const overlayBg = themeVar('--overlay');
+  const modalPanel = themeVar('--modal-panel');
+  const modalHeader = themeVar('--modal-header');
+  const modalText = themeVar('--modal-text');
+  const modalCode = themeVar('--modal-code');
+  const muted = themeVar('--muted');
+
   const overlay = document.createElement('div');
   overlay.id = '_payload_overlay';
   overlay.style.cssText = [
-    'position:fixed', 'inset:0', 'background:rgba(0,0,0,0.55)',
+    'position:fixed', 'inset:0', `background:${overlayBg}`,
     'z-index:9999', 'display:flex', 'align-items:center', 'justify-content:center',
   ].join(';');
 
   overlay.innerHTML = `
-<div style="background:#1e1e1e;border-radius:12px;width:92%;max-width:720px;
+<div style="background:${modalPanel};border-radius:12px;width:92%;max-width:720px;
   max-height:82vh;display:flex;flex-direction:column;
-  box-shadow:0 8px 40px rgba(0,0,0,0.5);overflow:hidden;">
+  box-shadow:0 8px 40px ${overlayBg};overflow:hidden;">
   <div style="display:flex;align-items:center;justify-content:space-between;
-    padding:12px 16px;border-bottom:1px solid #333;flex-shrink:0;background:#252526;">
-    <span style="font-size:13px;font-weight:600;color:#e8eaed;
+    padding:12px 16px;border-bottom:1px solid ${border};flex-shrink:0;background:${modalHeader};">
+    <span style="font-size:13px;font-weight:600;color:${modalText};
       font-family:'Google Sans','Segoe UI',sans-serif;">📋 Request Payload</span>
     <button id="_payload_close" style="background:none;border:none;cursor:pointer;
-      font-size:18px;color:#9aa0a6;padding:2px 8px;border-radius:4px;line-height:1;">✕</button>
+      font-size:18px;color:${muted};padding:2px 8px;border-radius:4px;line-height:1;">✕</button>
   </div>
   <pre id="_payload_pre" style="overflow:auto;padding:16px;margin:0;font-size:11.5px;
-    line-height:1.65;color:#d4d4d4;background:#1e1e1e;flex:1;
+    line-height:1.65;color:${modalCode};background:${modalPanel};flex:1;
     white-space:pre-wrap;word-break:break-word;font-family:Consolas,monospace;"></pre>
 </div>`;
 
@@ -517,8 +565,8 @@ async function streamAgentTurn(history, agentContent, isContinuation, signal) {
   if (isContinuation) {
     const sep = document.createElement('div');
     sep.style.cssText = [
-      'margin:6px 0 4px', 'border-top:1px dashed #e8eaed',
-      'font-size:11px', 'color:#80868b', 'padding-top:4px',
+      'margin:6px 0 4px', `border-top:1px dashed ${themeVar('--border')}`,
+      'font-size:11px', `color:${themeVar('--muted-2')}`, 'padding-top:4px',
     ].join(';');
     sep.textContent = '↩ Continuing…';
     agentContent.appendChild(sep);
@@ -530,9 +578,16 @@ async function streamAgentTurn(history, agentContent, isContinuation, signal) {
   const conf = PROVIDERS[cfg.provider];
   if (!conf) throw new Error(`Unknown provider: ${cfg.provider}`);
 
+  const requestUrl = conf.needsEndpoint
+    ? (cfg.endpoints && typeof cfg.endpoints[cfg.provider] === 'string' ? cfg.endpoints[cfg.provider].trim() : '')
+    : conf.url;
+
   const apiKey = (cfg.apiKeys && cfg.apiKeys[cfg.provider]) || conf.defaultKey || "";
   if (!apiKey && cfg.provider !== "ollama" && cfg.provider !== "copilot") {
     throw new Error(`${conf.name}: API Key not configured. Please open the settings to configure it.`);
+  }
+  if (conf.needsEndpoint && !requestUrl) {
+    throw new Error(`${conf.name}: Endpoint URL not configured. Please open the settings to configure it.`);
   }
   const model = cfg.model;
   if (!model) throw new Error("Model name not set. Please open the settings to configure it.");
@@ -544,7 +599,7 @@ async function streamAgentTurn(history, agentContent, isContinuation, signal) {
   const allMessages = effectivePrompt
     ? [{ role: "system", content: effectivePrompt }, ...history]
     : [...history];
-  const requestPayload = { provider: cfg.provider, model, url: conf.url, messages: allMessages };
+  const requestPayload = { provider: cfg.provider, model, url: requestUrl, messages: allMessages };
 
   // 本轮流式输出容器
   const stepEl = document.createElement('div');
@@ -680,7 +735,7 @@ async function streamAgentTurn(history, agentContent, isContinuation, signal) {
       reqBody.max_tokens = 2000;
     }
 
-    const res = await fetch(conf.url, {
+    const res = await fetch(requestUrl, {
       method:  "POST",
       headers: {
         "Authorization": "Bearer " + apiKey,
@@ -752,8 +807,8 @@ async function streamAgentTurn(history, agentContent, isContinuation, signal) {
         const chip = document.createElement('div');
         chip.style.cssText = [
           'margin-top:8px', 'padding:5px 10px',
-          'background:#f1f3f4', 'border-left:3px solid #1a73e8',
-          'border-radius:4px', 'font-size:11.5px', 'color:#3c4043',
+          `background:${themeVar('--surface-2')}`, `border-left:3px solid ${themeVar('--blue')}`,
+          'border-radius:4px', 'font-size:11.5px', `color:${themeVar('--text')}`,
           'font-family:Consolas,monospace', 'word-break:break-all',
         ].join(';');
         chip.textContent = '⚡ ' + match[1].trim();
@@ -770,20 +825,20 @@ async function streamAgentTurn(history, agentContent, isContinuation, signal) {
   payloadBtn.className = 'msg-payload-btn';
   payloadBtn.style.cssText = [
     'margin-top:5px', 'padding:2px 8px', 'display:inline-block',
-    'background:none', 'border:1px solid #dadce0', 'border-radius:4px',
-    'font-size:11px', 'color:#5f6368', 'cursor:pointer', 'font-family:inherit',
+    'background:none', `border:1px solid ${themeVar('--border-strong')}`, 'border-radius:4px',
+    'font-size:11px', `color:${themeVar('--muted')}`, 'cursor:pointer', 'font-family:inherit',
     'transition:all .15s',
   ].join(';');
   payloadBtn.textContent = '📋 View Payload';
   payloadBtn.onmouseenter = () => {
-    payloadBtn.style.background = '#f8f9fa';
-    payloadBtn.style.borderColor = '#1a73e8';
-    payloadBtn.style.color = '#1a73e8';
+    payloadBtn.style.background = themeVar('--surface');
+    payloadBtn.style.borderColor = themeVar('--blue');
+    payloadBtn.style.color = themeVar('--blue');
   };
   payloadBtn.onmouseleave = () => {
     payloadBtn.style.background = 'none';
-    payloadBtn.style.borderColor = '#dadce0';
-    payloadBtn.style.color = '#5f6368';
+    payloadBtn.style.borderColor = themeVar('--border-strong');
+    payloadBtn.style.color = themeVar('--muted');
   };
   payloadBtn.onclick = () => showPayloadModal(requestPayload);
   agentContent.appendChild(payloadBtn);
@@ -903,11 +958,11 @@ async function sendMessage() {
     if (wasAborted) {
       // 中途停止：保留已输出内容，无内容时显示提示
       if (!agentContent.textContent.trim()) {
-        agentContent.innerHTML = '<span style="color:#80868b">⏹ Stopped</span>';
+        agentContent.innerHTML = `<span style="color:${themeVar('--muted-2')}">⏹ Stopped</span>`;
       }
       // 不将 Stopped 文字写入 roundSteps，避免恢复时显示
     } else if (!agentContent.textContent.trim()) {
-      agentContent.innerHTML = `<span style="color:#b36200">⚠️ Server returned no content. The model may have returned an empty response, or the stream format is unexpected.</span>`;
+      agentContent.innerHTML = `<span style="color:${themeVar('--warning')}">⚠️ Server returned no content. The model may have returned an empty response, or the stream format is unexpected.</span>`;
     }
 
     // 11 & 12. 有内容时才保存（停止且无内容则不存入历史）
@@ -923,7 +978,7 @@ async function sendMessage() {
     if (err.name === 'AbortError') {
       // 用户主动停止，保留已输出内容
       if (!agentContent.textContent.trim()) {
-        agentContent.innerHTML = '<span style="color:#80868b">⏹ Stopped</span>';
+        agentContent.innerHTML = `<span style="color:${themeVar('--muted-2')}">⏹ Stopped</span>`;
       }
       // 无有任何已完成的步骤时，跳过保存（回复时水假无界面恢复）
       if (roundSteps.length === 0) {
@@ -936,21 +991,23 @@ async function sendMessage() {
         await saveSession();
       }
     } else {
-      const hint = err.message.includes("Key") || err.message.includes("settings")
+      const errMsg = (err && typeof err.message === 'string') ? err.message : String(err || '');
+      const errName = (err && err.name) ? err.name : (typeof err === 'string' ? 'Error' : (err && err.constructor && err.constructor.name) || 'Error');
+      const hint = (errMsg.includes("Key") || errMsg.includes("settings"))
         ? "Right-click the page → open the extension settings to configure API Key and model."
-        : err instanceof TypeError
+        : (err instanceof TypeError)
         ? "Network connection failed. Check the API URL and your network."
         : "";
       const errEl = document.createElement('div');
       errEl.style.cssText = [
         'margin-top:8px', 'padding:8px 10px',
-        'background:#fce8e6', 'border-left:3px solid #c62828',
-        'border-radius:4px', 'font-size:12.5px', 'color:#c62828', 'line-height:1.6',
+        `background:${themeVar('--danger-bg')}`, `border-left:3px solid ${themeVar('--danger')}`,
+        'border-radius:4px', 'font-size:12.5px', `color:${themeVar('--danger')}`, 'line-height:1.6',
       ].join(';');
-      errEl.textContent = `❌ Request failed · ${err.name}: ${err.message}`;
+      errEl.textContent = `❌ Request failed · ${errName}: ${errMsg}`;
       if (hint) {
         const hintEl = document.createElement('div');
-        hintEl.style.cssText = 'margin-top:4px;font-size:12px;color:#80868b;';
+        hintEl.style.cssText = `margin-top:4px;font-size:12px;color:${themeVar('--muted-2')};`;
         hintEl.textContent = 'Hint: ' + hint;
         errEl.appendChild(hintEl);
       }
@@ -1049,6 +1106,7 @@ window.addEventListener("message", (e) => {
     // 仅保存时才重新加载配置，刷新语言 + 顶部模型信息栏
     if (e.data.type === "settings-saved") {
       loadConfig().then(cfg => {
+        applyTheme(cfg.theme);
         I18n.setLang(cfg.language);
         I18n.apply();
         const p = PROVIDERS[cfg.provider] || PROVIDERS.ollama;
@@ -1056,6 +1114,34 @@ window.addEventListener("message", (e) => {
       });
     }
   }
+});
+
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName !== 'sync') return;
+
+  if (changes.theme) {
+    applyTheme(normalizeTheme(changes.theme.newValue));
+  }
+
+  if (changes.userLang) {
+    I18n.setLang(changes.userLang.newValue || 'en');
+    I18n.apply();
+  }
+
+  if (changes.provider || changes.model) {
+    loadConfig().then(cfg => {
+      const p = PROVIDERS[cfg.provider] || PROVIDERS.ollama;
+      modelInfoEl.textContent = `${p.name} · ${cfg.model || I18n.t('model_not_set')}`;
+    });
+  }
+});
+
+systemThemeMedia.addEventListener('change', () => {
+  loadConfig().then(cfg => {
+    if (cfg.theme === 'device') {
+      applyTheme('device');
+    }
+  });
 });
 
 // Enter 发送，Shift+Enter 换行；自动增高

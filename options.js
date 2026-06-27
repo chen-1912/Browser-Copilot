@@ -11,6 +11,16 @@ const PROVIDERS = {
     keyDesc:        "Ollama 本地服务不校验 API Key，留空或填任意字符均可。",
     defaultKey:     "ollama",
   },
+  cliproxy: {
+    name:           "CLI Proxy API",
+    hints:          ["gpt-4o", "gpt-4o-mini", "claude-sonnet-4-5", "o3-mini", "gemini-2.0-flash"],
+    keyPlaceholder: "sk-...",
+    keyDesc:        "填写 CLI Proxy API 所要求的访问密钥。",
+    endpointPlaceholder: "https://your-proxy.example.com/v1/chat/completions",
+    endpointDesc:   "CLI Proxy API 的聊天补全接口地址。通常填写完整的 OpenAI 兼容 chat/completions 端点。",
+    defaultKey:     "",
+    needsEndpoint:  true,
+  },
   openrouter: {
     name:           "OpenRouter",
     hints:          [
@@ -32,6 +42,13 @@ const PROVIDERS = {
     keyDesc:        "在 platform.deepseek.com → API Keys 页面获取。",
     defaultKey:     "",
   },
+  siliconflow: {
+    name:           "SiliconFlow",
+    hints:          ["Qwen/Qwen3-8B", "Qwen/Qwen2.5-7B-Instruct", "deepseek-ai/DeepSeek-V3", "deepseek-ai/DeepSeek-R1", "THUDM/GLM-4-9B-Chat"],
+    keyPlaceholder: "sk-...",
+    keyDesc:        "在 cloud.siliconflow.cn → API Keys 页面创建。",
+    defaultKey:     "",
+  },
   aistudio: {
     name:           "Google AI Studio",
     hints:          ["gemini-2.0-flash", "gemini-2.5-pro-exp-03-25", "gemini-1.5-pro", "gemini-1.5-flash", "gemma-4-31b-it"],
@@ -49,7 +66,8 @@ const PROVIDERS = {
   },
 };
 
-const DEFAULT_API_KEYS = { ollama: "ollama", openrouter: "", deepseek: "", aistudio: "", copilot: "" };
+const DEFAULT_API_KEYS = { ollama: "ollama", cliproxy: "", openrouter: "", deepseek: "", siliconflow: "", aistudio: "", copilot: "" };
+const DEFAULT_ENDPOINTS = { cliproxy: "" };
 
 // 内置系统提示词（发布前将该常量更新为目标内容）
 const DEFAULT_SYSTEM_PROMPT =
@@ -86,14 +104,18 @@ const providerSelect    = document.getElementById("provider-select");
 const modelInput        = document.getElementById("model-input");
 const modelHints        = document.getElementById("model-hints");
 const apikeyInput       = document.getElementById("apikey-input");
+const endpointInput     = document.getElementById("endpoint-input");
 const toggleKeyBtn      = document.getElementById("toggle-key");
+const toggleKeyIcon     = document.getElementById("toggle-key-icon");
 const keyDesc           = document.getElementById("key-desc");
+const endpointDesc      = document.getElementById("endpoint-desc");
 const saveBtn           = document.getElementById("save-btn");
 const saveMsg           = document.getElementById("save-msg");
 const systemPromptInput = document.getElementById("system-prompt");
 const skillsList        = document.getElementById("skills-list");
 const addSkillBtn       = document.getElementById("add-skill-btn");
 const languageSelect    = document.getElementById("language-select");
+const themeSelect       = document.getElementById("theme-select");
 const historyRoundsInput = document.getElementById("history-rounds");
 const agentMaxStepsInput = document.getElementById("agent-max-steps");
 const actionDelayInput   = document.getElementById("action-delay");
@@ -101,6 +123,7 @@ const loopFeedbackPromptInput = document.getElementById("loop-feedback-prompt");
 
 // ── GitHub Copilot DOM 引用 ──
 const apikeySection    = document.getElementById("apikey-section");
+const endpointSection  = document.getElementById("endpoint-section");
 const ghCopilotSection = document.getElementById("gh-copilot-section");
 const ghStatusText     = document.getElementById("gh-status-text");
 const ghAuthFlow       = document.getElementById("gh-auth-flow");
@@ -114,11 +137,13 @@ const ghDisconnectBtn  = document.getElementById("gh-disconnect-btn");
 
 // 当前所有平台已保存的 Key（切换平台时需要保留其他平台的值）
 let currentApiKeys    = { ...DEFAULT_API_KEYS };
+let currentEndpoints  = { ...DEFAULT_ENDPOINTS };
 // 当前各平台的自定义常用模型列表
 let currentCustomHints = {};
 
 // 设备授权轮询中止信号
 let _pollAbort = false;
+const systemThemeMedia = window.matchMedia('(prefers-color-scheme: dark)');
 
 // ─────────────────────────────────────────────
 // 存储操作
@@ -131,6 +156,26 @@ function saveConfig(data) {
   return new Promise(resolve => chrome.storage.sync.set(data, resolve));
 }
 
+function normalizeTheme(theme) {
+  return theme === 'dark' || theme === 'light' || theme === 'device' ? theme : 'light';
+}
+
+function resolveTheme(theme) {
+  const normalizedTheme = normalizeTheme(theme);
+  if (normalizedTheme === 'device') {
+    return systemThemeMedia.matches ? 'dark' : 'light';
+  }
+  return normalizedTheme;
+}
+
+function applyTheme(theme) {
+  document.body.dataset.theme = resolveTheme(theme);
+}
+
+function getThemeColor(name) {
+  return getComputedStyle(document.body).getPropertyValue(name).trim();
+}
+
 // ─────────────────────────────────────────────
 // 切换平台时更新提示/Key 字段
 // ─────────────────────────────────────────────
@@ -141,6 +186,7 @@ function onProviderChange() {
   // GitHub Copilot：隐藏 API Key 区，显示 GitHub 授权区
   if (conf.noApiKey) {
     apikeySection.style.display    = 'none';
+    endpointSection.style.display  = 'none';
     ghCopilotSection.style.display = '';
   } else {
     apikeySection.style.display    = '';
@@ -150,6 +196,16 @@ function onProviderChange() {
     apikeyInput.value       = currentApiKeys[pid] || "";
     apikeyInput.placeholder = I18n.t('key_ph_' + pid);
     keyDesc.textContent     = I18n.t('key_desc_' + pid);
+
+    if (conf.needsEndpoint) {
+      endpointSection.style.display = '';
+      endpointInput.value = currentEndpoints[pid] || "";
+      endpointInput.placeholder = I18n.t('endpoint_ph_' + pid);
+      endpointDesc.textContent = I18n.t('endpoint_desc_' + pid);
+    } else {
+      endpointSection.style.display = 'none';
+      endpointInput.value = '';
+    }
   }
 
   // 渲染模型提示 chips
@@ -208,7 +264,7 @@ function renderHints() {
     const inp = document.createElement("input");
     inp.type        = "text";
     inp.placeholder = I18n.t('model_hint_placeholder');
-    inp.style.cssText = "font-size:11.5px;font-family:Consolas,monospace;border:1px solid #1a73e8;border-radius:12px;padding:3px 10px;outline:none;width:150px;";
+    inp.style.cssText = `font-size:11.5px;font-family:Consolas,monospace;border:1px solid ${getThemeColor('--blue')};border-radius:12px;padding:3px 10px;outline:none;width:150px;background:${getThemeColor('--surface')};color:${getThemeColor('--text')};`;
     const confirm = () => {
       const val = inp.value.trim();
       if (val) hints.push(val);
@@ -283,13 +339,13 @@ async function refreshGhStatus() {
   const user = await GitHubAuth.getConnectedUser();
   if (user) {
     ghStatusText.textContent     = `${I18n.t('gh_connected_as')}: @${user}`;
-    ghStatusText.style.color     = '#1e8e3e';
+    ghStatusText.style.color     = getThemeColor('--success-strong');
     ghConnectBtn.style.display   = 'none';
     ghDisconnectBtn.style.display = '';
     ghAuthFlow.style.display     = 'none';
   } else {
     ghStatusText.textContent     = I18n.t('gh_not_connected');
-    ghStatusText.style.color     = '#80868b';
+    ghStatusText.style.color     = getThemeColor('--muted-2');
     ghConnectBtn.style.display   = '';
     ghDisconnectBtn.style.display = 'none';
     ghAuthFlow.style.display     = 'none';
@@ -335,7 +391,7 @@ ghConnectBtn.addEventListener('click', async () => {
     // 授权成功
     await GitHubAuth.saveOAuthToken(oauthToken);
     ghWaitingText.textContent = I18n.t('gh_auth_success');
-    ghWaitingText.style.color = '#1e8e3e';
+    ghWaitingText.style.color = getThemeColor('--success-strong');
     setTimeout(async () => {
       ghWaitingText.style.color = '';
       await refreshGhStatus();
@@ -349,7 +405,7 @@ ghConnectBtn.addEventListener('click', async () => {
                : I18n.t('gh_auth_error');
     if (msg) {
       ghStatusText.textContent = msg;
-      ghStatusText.style.color = '#d93025';
+      ghStatusText.style.color = getThemeColor('--danger-strong');
     }
     ghConnectBtn.disabled    = false;
     ghConnectBtn.textContent = I18n.t('gh_connect_btn');
@@ -368,6 +424,16 @@ languageSelect.addEventListener("change", () => {
   I18n.setLang(languageSelect.value);
   I18n.apply();
   onProviderChange(); // 重新渲染 keyDesc 和 hints
+});
+
+themeSelect.addEventListener("change", () => {
+  applyTheme(themeSelect.value);
+});
+
+systemThemeMedia.addEventListener('change', () => {
+  if (themeSelect.value === 'device') {
+    applyTheme('device');
+  }
 });
 
 // ─────────────────────────────────────────────
@@ -392,16 +458,22 @@ async function onSave() {
     currentApiKeys[pid] = apikeyInput.value.trim();
   }
 
+  if (PROVIDERS[pid]?.needsEndpoint) {
+    currentEndpoints[pid] = endpointInput.value.trim();
+  }
+
   await saveConfig({
     provider:     pid,
     model:        modelInput.value.trim(),
     apiKeys:      { ...currentApiKeys },
+    endpoints:    { ...currentEndpoints },
     customHints:  { ...currentCustomHints },
     systemPrompt: systemPromptInput.value.trim(),
     loopFeedbackPrompt: loopFeedbackPromptInput.value,
     skills:       collectSkills(),
     language:     languageSelect.value,
     userLang:     languageSelect.value,
+    theme:        themeSelect.value,
     historyRounds: historyRoundsInput.value.trim(),
     agentMaxSteps: agentMaxStepsInput.value.trim(),
     actionDelay:   actionDelayInput.value !== '' ? (parseInt(actionDelayInput.value) || 0) : 0,
@@ -420,19 +492,30 @@ async function onSave() {
 // ─────────────────────────────────────────────
 // 显示/隐藏 Key
 // ─────────────────────────────────────────────
+function syncToggleKeyIcon() {
+  const isHidden = apikeyInput.type === "password";
+  toggleKeyIcon.src = isHidden ? "assets/icons/show.svg" : "assets/icons/hide.svg";
+  toggleKeyIcon.alt = isHidden ? "Show password" : "Hide password";
+}
+
 toggleKeyBtn.addEventListener("click", () => {
   if (apikeyInput.type === "password") {
     apikeyInput.type         = "text";
-    toggleKeyBtn.textContent = "🙈";
   } else {
     apikeyInput.type         = "password";
-    toggleKeyBtn.textContent = "👁";
   }
+  syncToggleKeyIcon();
 });
+
+syncToggleKeyIcon();
 
 // 实时同步输入的 Key 到内存（切换平台前自动保留）
 apikeyInput.addEventListener("input", () => {
   currentApiKeys[providerSelect.value] = apikeyInput.value;
+});
+
+endpointInput.addEventListener("input", () => {
+  currentEndpoints[providerSelect.value] = endpointInput.value;
 });
 
 providerSelect.addEventListener("change", () => {
@@ -468,6 +551,9 @@ saveBtn.addEventListener("click", onSave);
     I18n.apply();
   }
 
+  const effectiveTheme = normalizeTheme(stored.theme);
+  applyTheme(effectiveTheme);
+
   if (stored.provider && PROVIDERS[stored.provider]) {
     providerSelect.value = stored.provider;
   }
@@ -476,12 +562,16 @@ saveBtn.addEventListener("click", onSave);
     modelInput.value = stored.model;
   } else {
     // 首次未保存时，根据当前平台给出默认模型名
-    const _defaultModels = { deepseek: 'deepseek-v4-flash', ollama: 'qwen3:8b', aistudio: 'gemini-2.0-flash' };
+    const _defaultModels = { deepseek: 'deepseek-v4-flash', siliconflow: 'Qwen/Qwen3-8B', cliproxy: 'gpt-4o', ollama: 'qwen3:8b', aistudio: 'gemini-2.0-flash' };
     modelInput.value = _defaultModels[providerSelect.value] || '';
   }
 
   if (stored.apiKeys) {
     Object.assign(currentApiKeys, stored.apiKeys);
+  }
+
+  if (stored.endpoints && typeof stored.endpoints === 'object') {
+    Object.assign(currentEndpoints, stored.endpoints);
   }
 
   if (stored.customHints && typeof stored.customHints === 'object') {
@@ -499,6 +589,7 @@ saveBtn.addEventListener("click", onSave);
   }
 
   languageSelect.value = effectiveLang;
+  themeSelect.value = effectiveTheme;
 
   historyRoundsInput.value = stored.historyRounds != null ? stored.historyRounds : 3;
 
